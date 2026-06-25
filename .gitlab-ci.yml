@@ -1,0 +1,22 @@
+stages:
+  - test
+  - build
+
+test:
+  stage: test
+  image: python:3.12-slim
+  script:
+    - pip install -r requirements.txt
+    - pytest test_app.py -v
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  only:
+    - main
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build -t $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:latest
