@@ -17,6 +17,24 @@ spec:
           image: ghcr.io/akiooo45/demo-app:cd7c1094b096b688a1d0bf454237d08f07b1b284
           ports:
             - containerPort: 8000
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: demo-app-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: demo-app-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
 ---
 apiVersion: v1
 kind: Service
