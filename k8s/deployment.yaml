@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: ghcr.io/akiooo45/demo-app:f20b6a4a655d4d9b6dcd12837591bbd1e9403849
+          image: ghcr.io/akiooo45/demo-app:fa8adbdd9ffc137ef74fddb1bab64e978aa7af62
           ports:
             - containerPort: 8000
           volumeMounts:
