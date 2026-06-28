@@ -2,9 +2,14 @@ from fastapi import FastAPI
 import os
 import sqlite3
 from pydantic import BaseModel
+import redis
+import json
 
 app = FastAPI()
 DB_PATH = os.getenv("DB_PATH", "/data/items.db")
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 
 def get_db():  # ← 新增：获取数据库连接，自动建表
@@ -36,11 +41,16 @@ class ItemCreate(BaseModel):
     name: str
 
 
-@app.get("/items")  # ← 新增
+@app.get("/items")
 def list_items():
+    cached = r.get("items:list")
+    if cached:
+        return json.loads(cached)
     db = get_db()
     rows = db.execute("SELECT id, name FROM items ORDER BY id").fetchall()
-    return [{"id": r["id"], "name": r["name"]} for r in rows]
+    result = [{"id": row["id"], "name": row["name"]} for row in rows]
+    r.setex("items:list", 30, json.dumps(result))
+    return result
 
 
 @app.post("/items", status_code=201)  # ← 新增
@@ -48,6 +58,7 @@ def create_item(item: ItemCreate):
     db = get_db()
     db.execute("INSERT INTO items (name) VALUES (?)", (item.name,))
     db.commit()
+    r.delete("items:list")  # 追加在 return 前面
     return {"ok": True}
 
 
@@ -60,4 +71,5 @@ def delete_item(item_id: int):
     db.commit()
     if cur.rowcount == 0:
         raise HTTPException(status_code=404, detail="not found")
+    r.delete("items:list")
     return {"ok": True}

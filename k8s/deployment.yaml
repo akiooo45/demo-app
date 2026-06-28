@@ -17,6 +17,9 @@ spec:
           image: ghcr.io/akiooo45/demo-app:latest
           ports:
             - containerPort: 8000
+          env:
+            - name: REDIS_HOST
+              value: "redis-master"
           volumeMounts:
             - name: data
               mountPath: /data

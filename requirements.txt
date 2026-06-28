@@ -3,3 +3,4 @@ uvicorn
 httpx2
 pytest
 pydantic
+redis
